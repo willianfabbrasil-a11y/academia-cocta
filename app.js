@@ -319,6 +319,10 @@ function sheets(){
   if(S.sheet==="add"){const pref=(S.flow&&S.flow.g[S.ficha])||[];const prefN=pref.map(x=>({peito:"Peito",triceps:"Tríceps",costas:"Costas",biceps:"Bíceps",ombros:"Ombros",quad:"Pernas",posterior:"Posterior",gluteo:"Glúteos",adutor:"Pernas",pant:"Pernas",abd:"Abdômen"})[x]);
     const groups=[...new Set(CAT.map(c=>c[1]))].sort((a,b)=>(prefN.includes(b)?1:0)-(prefN.includes(a)?1:0));const have=new Set((FICHAS[S.ficha]||{ex:[]}).ex.map(e=>e.n));
     return `<div class="dim" data-dim="closesheet"><div class="sheet"><div class="wrap"><div class="grab"></div><h2>Adicionar exercício</h2><p class="muted" style="margin:0 0 6px">Catálogo da academia</p><div class="cat">${groups.map(g=>`<h4 class="${prefN.includes(g)?'hl':''}">${g}${prefN.includes(g)?" · da sua ficha":""}</h4>${CAT.filter(c=>c[1]===g).map(([n])=>`<button data-addex="${n}" ${have.has(n)?'style="opacity:.45"':''}>${n}<span>${have.has(n)?"já está na ficha":"+"}</span></button>`).join("")}`).join("")}</div></div></div></div>`}
+  if(S.sheet==="adminpw")return `<div class="dim" data-dim="closesheet"><div class="sheet"><div class="wrap"><div class="grab"></div><h2>Administração</h2><p class="muted" style="margin:0 0 12px">Digite a senha.</p>
+    <input id="admpw" class="inp" type="password" autocomplete="current-password" placeholder="Senha">
+    ${S.admErr?`<p class="small" style="color:var(--red);text-align:left;margin:8px 0 0">${S.admErr}</p>`:""}
+    <div style="display:grid;gap:10px;margin-top:14px"><button class="btn red" data-act="adminpw" ${S.admBusy?'disabled style="opacity:.6"':''}>${S.admBusy?"Conferindo…":"Entrar"}</button><button class="btn line" data-act="closesheet">Cancelar</button></div></div></div></div>`;
   if(S.sheet==="logout")return `<div class="dim" data-dim="closesheet"><div class="sheet"><div class="wrap"><div class="grab"></div><h2>Sair da conta?</h2><p class="muted" style="margin:0 0 16px">Seus treinos ficam guardados. É só entrar de novo.</p><div style="display:grid;gap:10px"><button class="btn red" data-act="logout">Sair</button><button class="btn line" data-act="closesheet">Cancelar</button></div></div></div></div>`;
   return "";
 }
@@ -380,7 +384,7 @@ function vPerfil(){
      ${S.presOnly?"":`<button data-act="modeDef">${ic("check","ic")}<span class="sp">Modo do treino<br><small>${S.modeDef==="direto"?"Direto: marcar cada exercício como feito":"Completo: série a série, com descanso"} · toque para trocar</small></span>${ic("chev","chev")}</button>`}
      <div class="li">${ic("bell","ic")}<span class="sp">Som e vibração no descanso</span><button class="sw ${S.notif?'on':''}" data-act="notif" style="padding:0;border:0;min-height:0;width:50px" aria-label="Alternar"></button></div>
    </div>
-   ${S.admin?`<div class="lbl">Administração</div><div class="list"><button data-act="openadmin">${ic("clock","ic")}<span class="sp">Registro de presença</span>${ic("chev","chev")}</button></div>`:""}
+   <div class="lbl">Administração</div><div class="list"><button data-act="${S.admin?"openadmin":"askadmin"}">${ic("clock","ic")}<span class="sp">Registro de presença</span>${ic("chev","chev")}</button></div>
    <button class="btn line" style="margin-top:18px;color:var(--red)" data-act="asklogout">${ic("out")} Sair da conta</button>
    <p class="small" style="margin-top:14px">Academia COCTA · versão ${APPV}${S.user&&S.user.email&&!/@teste\.cocta\.app$/.test(S.user.email)?"<br>"+S.user.email:""}<br><span style="font-size:11px">Créditos: imagens Free Exercise DB · desenho do corpo body-highlighter (MIT)</span></p>
   </div></div>${nav()}${sheets()}`;
@@ -493,11 +497,13 @@ function vAdmin(){
    <div class="lbl">QR code da porta</div>
    <div class="card" style="text-align:center">${S.admQR?`<div style="max-width:220px;margin:0 auto">${qrImg(qrUrl(S.admQR))}</div>`:`<p class="muted">Carregando…</p>`}
     <div style="display:grid;gap:10px;margin-top:12px"><button class="btn navy sm" data-act="printqr">Imprimir QR code</button><button class="btn line sm" data-act="askqr">Gerar QR code novo</button></div></div>
+   <button class="btn ghost sm" style="margin-top:16px" data-act="sairadmin">Sair da administração</button>
   </div></div>${nav()}${S.sheet==="newqr"?`<div class="dim" data-dim="closesheet"><div class="sheet"><div class="wrap"><div class="grab"></div><h2>Gerar QR code novo?</h2><p class="muted" style="margin:0 0 16px">O QR code atual deixa de funcionar. Imprima o novo e troque o da porta.</p><div style="display:grid;gap:10px"><button class="btn red" data-act="newqr">Gerar novo</button><button class="btn line" data-act="closesheet">Cancelar</button></div></div></div></div>`:""}`;
 }
 function gLogo(){return `<svg viewBox="0 0 24 24" style="width:22px;height:22px"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.8 0-5.2-1.9-6.1-4.5H2.3v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.9 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.3a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.1 1.6l3.1-3.1A11 11 0 0 0 2.3 7.1l3.6 2.8C6.8 7.3 9.2 5.4 12 5.4z"/></svg>`}
 function aLogo(){return `<svg viewBox="0 0 24 24" style="width:22px;height:22px" fill="#fff"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9a4.8 4.8 0 0 0-3.8-2c-1.6-.2-3.1.9-3.9.9s-2-.9-3.4-.9a5 5 0 0 0-4.2 2.6c-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6s1.8-.8 3.3-.8 2 .8 3.4.8 2.2-1.3 3.1-2.5a10 10 0 0 0 1.4-2.9 4.4 4.4 0 0 1-2.6-4.1zM13.9 5c.7-.9 1.2-2 1-3.2-1 0-2.2.7-3 1.6-.6.7-1.2 1.9-1 3 1.1.1 2.3-.6 3-1.4z"/></svg>`}
 
+let admPwBuf="";
 function render(){
   const app=$("#app");
   const map={carregando:vCarregando,entrar:vEntrar,hoje:vHoje,treino:vTreino,fichas:vFichas,ficha:vFicha,historico:vHist,perfil:vPerfil,cadastro:vCadastro,admin:vAdmin,montar:vMontar,assist:vAssist,detalhe:vDetalhe};
@@ -505,6 +511,7 @@ function render(){
   app.innerHTML=`<div class="view">${map[S.screen]()}${S.toast?`<div class="toast">${S.toast}</div>`:""}${okView()}${notaView()}</div>`;
   if(same){const n=app.querySelector(".scroll");if(n)n.scrollTop=top}
   render.last=S.screen;
+  const ap=app.querySelector("#admpw");if(ap&&admPwBuf){ap.value=admPwBuf;if(document.activeElement!==ap)ap.focus()}
   if(S.scan)attachVideo();
   persist();
 }
@@ -609,6 +616,12 @@ const A={
     notaclose(){S.nota=null;render()},
     notaprint(){S.nota.comPrint=!S.nota.comPrint;const t=$("#notat");if(t)S.nota.texto=t.value;render()},
     notasave(){salvarNota()},
+    askadmin(){if(!navigator.onLine)return toast("Conecte-se à internet para entrar.");admPwBuf="";S.admErr="";S.sheet="adminpw";render();setTimeout(()=>{const i=$("#admpw");i&&i.focus()},60)},
+    async adminpw(){const i=$("#admpw"),pw=(i&&i.value)||admPwBuf;if(!pw||S.admBusy)return;admPwBuf="";S.admBusy=true;S.admErr="";render();
+      try{const {data,error}=await SB.rpc("entrar_admin",{p_senha:pw});if(error)throw error;S.admBusy=false;
+        if(data===true){S.admin=true;S.sheet=null;persist();A.openadmin()}else{S.admErr="Senha incorreta.";render()}}
+      catch(e){S.admBusy=false;S.admErr=/muitas_tentativas/.test(e&&e.message||"")?"Muitas tentativas. Tente de novo em 15 minutos.":"Sem conexão. Tente de novo.";render()}},
+    async sairadmin(){try{await SB.rpc("sair_admin")}catch(e){}S.admin=false;persist();go("perfil")},
     asklogout(){S.sheet="logout";render()},
     async logout(){S.sheet=null;startSession.uid=null;S.ready=false;try{await SB.auth.signOut()}catch(e){}S.user=null;S.admin=false;resetLocal();S.loginBusy=false;go("entrar")},
   };
@@ -660,6 +673,8 @@ $("#app").addEventListener("click",e=>{
   if(a.startsWith("eds:")){A.eds(a.slice(4));return}
   (A[a]||(()=>{}))();
 });
+$("#app").addEventListener("keydown",e=>{if(e.target.id==="admpw"&&e.key==="Enter")A.adminpw()});
+$("#app").addEventListener("input",e=>{if(e.target.id==="admpw")admPwBuf=e.target.value});
 $("#app").addEventListener("input",e=>{
   const t=e.target;
   if(t.dataset.cad){S.cadDraft[t.dataset.cad]=t.value}
@@ -731,12 +746,13 @@ async function runOp(op){
 
 /* ---------- busca os dados da conta ---------- */
 async function pull(){if(!navigator.onLine||!S.user)return;const uid=S.user.id,pend=qget();
-  const [p,t,pr,qh]=await Promise.all([SB.from("perfis").select("*").eq("id",uid).maybeSingle(),
+  const [p,t,pr,qh,adm]=await Promise.all([SB.from("perfis").select("*").eq("id",uid).maybeSingle(),
     SB.from("treinos").select("id,letra,feito_em,itens").eq("user_id",uid).order("feito_em",{ascending:false}).limit(300),
     SB.from("presencas").select("id,entrada,saida,limite_saida,saida_auto").eq("user_id",uid).order("entrada",{ascending:false}).limit(30),
-    SB.rpc("qr_hash")]);
+    SB.rpc("qr_hash"),SB.rpc("eh_admin")]);
   if(p.error&&netErr(p.error))return;
-  if(p.data){S.admin=!!p.data.is_admin;
+  if(adm&&!adm.error)S.admin=adm.data===true;
+  if(p.data){
     if(!pend.some(o=>o.t==="perfil")){const r=p.data,d=r.dados||{};
       S.cad={nome:r.nome||"",posto:r.posto||"",vinc:r.vinculo==="dependente"?"dep":"socio",titular:r.titular||"",tel:r.celular||"",boneco:r.boneco||"m"};S.boneco=S.cad.boneco;
       S.presOnly=r.uso==="presenca";S.modeDef=r.modo_treino||"direto";S.mode=S.modeDef;
