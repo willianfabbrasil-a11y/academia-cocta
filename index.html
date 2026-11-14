@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Academia COCTA</title>
+<meta name="description" content="Treinos e presença na academia do COCTA.">
+<meta name="theme-color" content="#3A507A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="COCTA">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="bench">
+  <aside class="side">
+    <div class="brand"><img src="img/logo.webp" alt="Logo COCTA"><div><b>Academia COCTA</b><span>Prévia em aparelhos</span></div></div>
+    <div class="grp"><h3>Aparelho</h3><div class="opt" id="devs"></div></div>
+    <div class="grp"><h3>Tamanho na tela</h3><div class="opt" id="zoom"></div></div>
+    <div class="note">No celular, o app abre em tela cheia.</div>
+  </aside>
+  <main class="stage" id="stage">
+    <div class="stage-top" id="dims"></div>
+    <div class="scaler" id="scaler"><div class="device" id="device"><div class="screen" id="screen"><div class="app" id="app"></div></div></div></div>
+  </main>
+</div>
+<div id="printqr"></div>
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="app.js"></script>
+<script>
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+</script>
+</body>
+</html>
