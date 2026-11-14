@@ -499,7 +499,7 @@ function render(){
   const app=$("#app");
   const map={carregando:vCarregando,entrar:vEntrar,hoje:vHoje,treino:vTreino,fichas:vFichas,ficha:vFicha,historico:vHist,perfil:vPerfil,cadastro:vCadastro,admin:vAdmin,montar:vMontar,assist:vAssist,detalhe:vDetalhe};
   const sc=app.querySelector(".scroll"),top=sc?sc.scrollTop:0,same=render.last===S.screen;
-  app.innerHTML=`<div class="view">${map[S.screen]()}${S.toast?`<div class="toast">${S.toast}</div>`:""}${okView()}</div>`;
+  app.innerHTML=`<div class="view">${map[S.screen]()}${S.toast?`<div class="toast">${S.toast}</div>`:""}${okView()}${notaView()}</div>`;
   if(same){const n=app.querySelector(".scroll");if(n)n.scrollTop=top}
   render.last=S.screen;
   if(S.scan)attachVideo();
@@ -602,8 +602,12 @@ const A={
     askqr(){S.sheet="newqr";render()},
     async newqr(){S.sheet=null;render();try{const {data,error}=await SB.rpc("novo_qr");if(error)throw error;S.admQR=data;S.qrHash=await sha(data);persist();render();toast("QR code novo gerado")}catch(e){toast("Sem conexão. Tente de novo.")}},
     printqr(){if(!S.admQR)return;const el=$("#printqr");el.innerHTML=`<div class="pq"><img src="${LOGO}" alt=""><h1>Academia COCTA</h1><p>Check-in e check-out</p>${qrImg(qrUrl(S.admQR))}<p>Abra o app e toque em <b>Fazer check-in</b>,<br>ou aponte a câmera do celular.</p></div>`;setTimeout(()=>print(),150)},
+    nota(){abrirNota()},
+    notaclose(){S.nota=null;render()},
+    notaprint(){S.nota.comPrint=!S.nota.comPrint;const t=$("#notat");if(t)S.nota.texto=t.value;render()},
+    notasave(){salvarNota()},
     asklogout(){S.sheet="logout";render()},
-    async logout(){S.sheet=null;try{await SB.auth.signOut()}catch(e){}S.user=null;S.admin=false;resetLocal();S.loginBusy=false;go("entrar")},
+    async logout(){S.sheet=null;startSession.uid=null;S.ready=false;try{await SB.auth.signOut()}catch(e){}S.user=null;S.admin=false;resetLocal();S.loginBusy=false;go("entrar")},
   };
 /* arrastar peças do rodízio */
 let DR=null;
@@ -617,7 +621,7 @@ document.addEventListener("pointercancel",()=>{if(DR){DR.pc.classList.remove("dr
 
 /* ---------------- interações do app ---------------- */
 $("#app").addEventListener("click",e=>{
-  if(e.target.classList.contains("dim")){if(e.target.dataset.dim==="restclose")S.rest=null;else if(e.target.dataset.dim==="seq")A.seqkeep();else if(e.target.dataset.dim==="how"){S.sheet=null}else S.sheet=null;render();return}
+  if(e.target.classList.contains("dim")){if(e.target.dataset.dim==="notaclose")S.nota=null;else if(e.target.dataset.dim==="restclose")S.rest=null;else if(e.target.dataset.dim==="seq")A.seqkeep();else if(e.target.dataset.dim==="how"){S.sheet=null}else S.sheet=null;render();return}
   const t=e.target.closest("[data-go],[data-act],[data-today],[data-open],[data-set],[data-ficha],[data-mv],[data-rm],[data-stp],[data-addex],[data-ht],[data-evo],[data-day],[data-how],[data-mus],[data-asst],[data-detg],[data-asstgo],[data-exdone],[data-tmr],[data-edx],[data-sdot]");if(!t)return;
   const d=t.dataset;
   if(d.go){if(d.go==="fichas"&&S.screen==="ficha"){}go(d.go);return}
@@ -656,6 +660,7 @@ $("#app").addEventListener("click",e=>{
 $("#app").addEventListener("input",e=>{
   const t=e.target;
   if(t.dataset.cad){S.cadDraft[t.dataset.cad]=t.value}
+  if(t.id==="notat"&&S.nota){S.nota.texto=t.value}
   if(t.id==='admq'){S.admQ=t.value;const l=$('#admlist');if(l)l.innerHTML=admRows()}
   if(t.dataset.kg){const [i,j]=t.dataset.kg.split(".").map(Number);S.w.ex[i].sets[j].kg=+t.value||0}
   if(t.dataset.r){const [i,j]=t.dataset.r.split(".").map(Number);S.w.ex[i].sets[j].r=+t.value||0}
@@ -689,7 +694,7 @@ function qrImg(text){const q=qrcode(0,"M");q.addData(text);q.make();return q.cre
 /* ---------- dados guardados no celular ---------- */
 const LSK=()=>"cocta:"+(S.user?S.user.id:"anon"),QK=()=>"cocta:q:"+(S.user?S.user.id:"anon");
 function snapshot(){return {cad:S.cad,FICHAS,ORDER,HIST,lastDone:S.lastDone,off:S.off,offList:S.offList,modeDef:S.modeDef,notif:S.notif,presOnly:S.presOnly,boneco:S.boneco,inAt:S.inAt,limite:S.limite,myPres:S.myPres,qrHash:S.qrHash,admin:S.admin,configured:S.configured}}
-function persist(){if(!S.user)return;try{localStorage.setItem(LSK(),JSON.stringify(snapshot()))}catch(e){}perfilChanged()}
+function persist(){if(!S.user||!S.ready)return;try{localStorage.setItem(LSK(),JSON.stringify(snapshot()))}catch(e){}perfilChanged()}
 function loadLocal(){try{const d=JSON.parse(localStorage.getItem(LSK())||"null");if(!d)return false;
   if(d.FICHAS&&Object.keys(d.FICHAS).length){FICHAS=d.FICHAS;ORDER=(d.ORDER&&d.ORDER.length)?d.ORDER:Object.keys(FICHAS)}if(d.HIST)HIST=d.HIST;
   ["cad","lastDone","off","offList","modeDef","notif","presOnly","boneco","inAt","limite","myPres","qrHash","admin","configured"].forEach(k=>{if(d[k]!==undefined)S[k]=d[k]});
@@ -715,6 +720,7 @@ async function runOp(op){
     else if(op.t==="in")res=await SB.rpc("registrar_entrada_v2",{p_codigo:op.code,p_hora:op.hora,p_agora:new Date().toISOString()});
     else if(op.t==="out")res=await SB.rpc("registrar_saida_v2",{p_hora:op.hora,p_agora:new Date().toISOString()});
     else if(op.t==="still")res=await SB.rpc("ainda_treinando");
+    else if(op.t==="nota")res=await SB.from("notas_teste").insert(op.n);
     if(res&&res.error){const e=res.error;
       if(op.t==="in"&&/qr_invalido/.test(e.message||"")){if(S.inAt===op.hora){S.inAt=null;S.limite=null;S.myPres=S.myPres.filter(p=>p.entrada!==op.hora);persist();render();toast("QR code não reconhecido. Faça o check-in de novo.")}return "ok"}
       if(netErr(e))return "retry";console.warn("sync",op.t,e);return "ok"}
@@ -751,9 +757,10 @@ async function boot(){
   if(last&&!navigator.onLine)return startSession(last);
   go("entrar")}
 async function startSession(user){
+  if(startSession.uid===user.id)return;startSession.uid=user.id;S.ready=false;
   S.user={id:user.id,email:user.email,nome:(user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||""};
   try{localStorage.setItem("cocta:user",JSON.stringify({id:S.user.id,email:S.user.email,user_metadata:{full_name:S.user.nome}}))}catch(e){}
-  S.screen="carregando";render();resetLocal();loadLocal();
+  S.screen="carregando";render();resetLocal();loadLocal();S.ready=true;
   try{await pull()}catch(e){}
   flush();route()}
 function route(){
@@ -803,5 +810,32 @@ async function loadAdmin(){S.admLoading=true;render();const t=new Date();t.setHo
   try{const [r,q]=await Promise.all([SB.rpc("presencas_admin_v2",{p_de:de.toISOString(),p_ate:ate.toISOString()}),S.admQR?Promise.resolve({data:S.admQR}):SB.rpc("qr_atual")]);
     if(r.error)throw r.error;S.admRows=r.data||[];if(q.data)S.admQR=q.data}catch(e){toast("Sem conexão. Tente de novo.")}
   S.admLoading=false;render()}
+
+/* ---------- notas do piloto (só no modo teste) ---------- */
+const MODO_TESTE=(window.APP_CONFIG||{}).AUTH_MODE==="teste";
+const TELAS={hoje:"Hoje",treino:"Treino em andamento",fichas:"Minhas fichas",ficha:"Editar ficha",historico:"Histórico",perfil:"Perfil",cadastro:"Cadastro",admin:"Administração",montar:"Monte seu treino",assist:"Modo assistente",detalhe:"Planeje em detalhes",entrar:"Entrar",carregando:"Carregando"};
+function telaAtual(){let t=TELAS[S.screen]||S.screen;if(S.scan)t+=" · leitura do QR";else if(S.ask2h)t+=" · confirmar saída";else if(S.ok)t+=S.ok.k==="in"?" · check-in feito":" · treino finalizado";else if(S.sheet)t+=" · janela "+S.sheet;return t}
+function notaView(){
+  if(!MODO_TESTE||!S.user)return"";
+  if(!S.nota)return `<button class="nota-fab" data-act="nota" aria-label="Anotar">${ic("edit")}</button>`;
+  const N=S.nota;
+  return `<div class="dim" data-dim="notaclose"><div class="sheet"><div class="wrap"><div class="grab"></div>
+    <div class="row" style="align-items:flex-start"><h2 class="sp">Anotar</h2><button class="mini" data-act="notaclose" aria-label="Fechar">${ic("x")}</button></div>
+    <p class="muted" style="margin:0 0 10px;font-size:14px">Tela: <b>${esc(N.tela)}</b></p>
+    <textarea id="notat" class="inp" rows="5" style="height:auto;min-height:120px;padding:12px;resize:vertical" placeholder="O que está estranho, errado ou poderia ser melhor?">${esc(N.texto||"")}</textarea>
+    <button class="li" data-act="notaprint" style="width:100%;margin:10px 0;border:0;background:none;display:flex;gap:10px;align-items:center;padding:6px 0;text-align:left"><span class="sw ${N.comPrint?'on':''}" style="flex:none"></span><span class="sp">Anexar foto desta tela${N.print===undefined?" (preparando…)":N.print===null?" (indisponível)":""}</span></button>
+    <button class="btn red" data-act="notasave">Salvar nota</button>
+  </div></div></div>`}
+function abrirNota(){S.nota={tela:telaAtual(),texto:"",comPrint:true,print:undefined};
+  const cap=()=>window.html2canvas($("#screen"),{scale:Math.min(1,600/$("#screen").offsetWidth),logging:false,useCORS:true,backgroundColor:"#ffffff"})
+    .then(c=>{if(S.nota){S.nota.print=c.toDataURL("image/jpeg",0.6);render();const t=$("#notat");if(t){t.focus();t.selectionStart=t.value.length}}})
+    .catch(()=>{if(S.nota){S.nota.print=null;render()}});
+  // capture before the sheet is drawn, so the photo shows the screen itself
+  const go=()=>{cap();setTimeout(()=>{if(S.nota&&S.nota.print===undefined)render()},30)};
+  if(window.html2canvas)go();else{const sc=document.createElement("script");sc.src="vendor/html2canvas.min.js";sc.onload=go;sc.onerror=()=>{S.nota.print=null;render()};document.head.appendChild(sc)}
+}
+function salvarNota(){const N=S.nota,t=$("#notat"),texto=((t&&t.value)||N.texto||"").trim();if(!texto)return toast("Escreva a nota");
+  const n={id:uuid(),user_id:S.user.id,autor:S.cad?fullName():null,tela:N.tela,texto,aparelho:`${navigator.userAgent} · ${innerWidth}×${innerHeight}`,print:N.comPrint&&N.print?N.print:null,criado_em:new Date().toISOString()};
+  qpush({t:"nota",n});S.nota=null;render();flush();toast("Nota salva ✓")}
 
 renderBench();boot();

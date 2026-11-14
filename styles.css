@@ -424,3 +424,7 @@ body.full .device,body.full .device.classic{padding:0;border-radius:0;box-shadow
 body.full .device .island,body.full .device .punch,body.full .device .speaker,body.full .device .homebtn{display:none}
 body.full .screen{width:100%!important;height:100%!important;border-radius:0}
 body.full .app .sbar{display:none}
+
+/* Balão de notas do piloto */
+.nota-fab{position:absolute;right:14px;bottom:calc(84px + var(--hb));z-index:38;width:48px;height:48px;border-radius:50%;border:0;background:#f2b705;color:#1b2232;box-shadow:0 4px 14px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;opacity:.92}
+.nota-fab svg{width:22px;height:22px}
