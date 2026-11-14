@@ -182,7 +182,9 @@ const PCOL=["#3A507A","#CE372E","#5b7bb3","#2c3e60","#e06a5f","#7a8fb3","#a32a22
 function sug(){const i=ORDER.indexOf(S.lastDone);return ORDER[(i+1)%ORDER.length]}
 function puzzle(arr,id,bg){return `<div class="puz" data-puz="${id}" style="--pbg:${bg||'#fff'}">${arr.map((k,i)=>`<div class="pc" data-pk="${k}" style="--c:${PCOL[(k.charCodeAt(0)-65)%PCOL.length]}"><b>${k}</b><small>${FICHAS[k]?FICHAS[k].foco.split(" e ")[0]:""}</small></div>`).join("")}</div><div class="seqtxt">${arr.join(" → ")} → ${arr[0]}…</div>`}
 
-function go(k){if((k==="hoje"||k==="fichas")&&S.cad)S.configured=true;S.screen=k;S.sheet=null;render();const sc=document.querySelector("#app .scroll");if(sc)sc.scrollTop=0;renderBenchJump()}
+function go(k){
+  if(S.fichaNova&&k!=="ficha"){const d=S.fichaNova;S.fichaNova=null;if(FICHAS[d]){delete FICHAS[d];ORDER=ORDER.filter(x=>x!==d)}}
+  if((k==="hoje"||k==="fichas")&&S.cad)S.configured=true;S.screen=k;S.sheet=null;render();const sc=document.querySelector("#app .scroll");if(sc)sc.scrollTop=0;renderBenchJump()}
 function renderBenchJump(){}
 function toast(t){S.toast=t;render();clearTimeout(toast.h);toast.h=setTimeout(()=>{S.toast=null;render()},2200)}
 
@@ -325,7 +327,7 @@ function vFichas(){
   <div class="scroll"><div class="wrap" style="padding-top:16px;padding-bottom:20px">
    <div class="card soft" style="margin-bottom:14px;--pbg:#F5F3F6"><b>Ordem do rodízio</b><p class="muted" style="margin:2px 0 10px;font-size:13.5px">Arraste as peças para mudar a sequência.</p>${puzzle(ORDER,"order","#F5F3F6")}</div>
    ${ORDER.map(k=>{const f=FICHAS[k];return `<button class="fic" data-ficha="${k}"><span class="tag">${k}</span><span class="sp"><b>${f.foco}</b><small>${f.ex.length} exercícios · ${f.ex.reduce((a,e)=>a+e.s,0)} séries</small></span>${ic("chev","chev")}</button>`}).join("")}
-   <button class="btn line" style="margin-top:6px" data-act="newficha">${ic("plus")} Nova ficha</button><button class="btn ghost sm" style="margin-top:6px" data-act="remontar">Montar o treino do zero (assistente ou detalhado)</button>
+   <button class="btn line" style="margin-top:6px" data-act="newficha">${ic("plus")} Nova ficha</button><button class="mode" style="margin-top:14px" data-act="remontar"><span class="ico" style="background:var(--red)">${ic("play")}</span><span class="sp"><b>Refazer meu treino</b><small>Monte fichas novas com o assistente, em detalhes ou com a ficha padrão ABC.</small></span></button>
    <p class="small" style="margin-top:16px">Toque numa ficha para editar exercícios, séries, repetições e descanso.</p>
   </div></div>${nav()}${sheets()}`;
 }
@@ -372,6 +374,7 @@ function vPerfil(){
    ${S.presOnly?`<div class="kpi" style="margin:0 0 18px"><div><b>${S.myPres.length}</b><span>idas registradas</span></div></div>`:`<div class="kpi" style="margin:0 0 18px"><div><b>${HIST.length}</b><span>treinos</span></div><div><b>${semana().filter(d=>d[2]).length}</b><span>esta semana</span></div><div><b>${ORDER.join("·")}</b><span>rodízio</span></div></div>`}
    <div class="list">
      <button data-act="editcad">${ic("edit","ic")}<span class="sp">Editar meu cadastro</span>${ic("chev","chev")}</button>
+     ${S.presOnly?"":`<button data-act="remontar">${ic("list","ic")}<span class="sp">Refazer meu treino</span>${ic("chev","chev")}</button>`}
      <button data-act="bonToggle">${ic("user","ic")}<span class="sp">Sexo<br><small>${((S.cad&&S.cad.boneco)||S.boneco)==="f"?"Feminino":"Masculino"} · toque para trocar</small></span>${ic("chev","chev")}</button>
      <button data-act="presToggle">${ic("clock","ic")}<span class="sp">Uso do app<br><small>${S.presOnly?"Só presença · toque para montar o treino":"Treino e presença · toque para usar só presença"}</small></span>${ic("chev","chev")}</button>
      ${S.presOnly?"":`<button data-act="modeDef">${ic("check","ic")}<span class="sp">Modo do treino<br><small>${S.modeDef==="direto"?"Direto: marcar cada exercício como feito":"Completo: série a série, com descanso"} · toque para trocar</small></span>${ic("chev","chev")}</button>`}
@@ -387,7 +390,7 @@ function fullName(){return S.cad?((S.cad.posto&&S.cad.posto.toLowerCase()!=="civ
 function ini(){const n=S.cad?S.cad.nome:"Associado COCTA";return n.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join("")}
 function presCard(){
   if(!S.inAt)return `<div class="pres out"><div class="st"><i></i><span class="sp">Você não está na academia<br><small>Chegou? Leia o QR code da porta.</small></span></div><button class="btn red" data-act="checkin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg> Fazer check-in (QR code)</button></div>`;
-  return `<div class="pres in"><div class="st"><i></i><span class="sp">Você está na academia<br><small>Entrada às ${hm(S.inAt)}</small></span></div><button class="btn line" data-act="checkout">${ic("out")} Finalizar o treino de hoje</button></div>`;
+  return `<div class="pres in"><div class="st"><i></i><span class="sp">Você está na academia<br><small>Entrada às ${hm(S.inAt)}. Na saída, toque abaixo ou leia o mesmo QR code da porta.</small></span></div><button class="btn line" data-act="checkout">${ic("out")} Finalizar o treino de hoje</button></div>`;
 }
 function doCheckout(hora){const inAt=S.inAt;if(!inAt)return;const out=hora||new Date();
   const min=Math.max(1,Math.round((out-new Date(inAt))/60000));
@@ -397,7 +400,7 @@ function doCheckout(hora){const inAt=S.inAt;if(!inAt)return;const out=hora||new 
 function qrSvg(){let r="";const N=21,seed=[7,3,11,5,13,2,17,19,23];for(let y=0;y<N;y++)for(let x=0;x<N;x++){const f=(x<7&&y<7)||(x>13&&y<7)||(x<7&&y>13);let on;if(f){const cx=x>13?x-14:x,cy=y>13?y-14:y;on=cx==0||cx==6||cy==0||cy==6||(cx>1&&cx<5&&cy>1&&cy<5)}else on=((x*seed[x%9]+y*seed[y%9]+x*y)%5)<2;if(on)r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}return `<svg class="qr" viewBox="0 0 21 21" fill="#fff">${r}</svg>`}
 function scanView(){
   if(!S.scan)return"";
-  return `<div class="scan"><div><b style="font-size:20px">Check-in</b><p style="margin:6px 0 0;opacity:.85;font-size:15px;line-height:1.4">Aponte a câmera para o QR code<br>colado na porta da academia</p></div>
+  return `<div class="scan"><div><b style="font-size:20px">${S.inAt?"Check-out":"Check-in"}</b><p style="margin:6px 0 0;opacity:.85;font-size:15px;line-height:1.4">Aponte a câmera para o QR code<br>colado na porta da academia</p></div>
    <div class="vf" style="overflow:hidden"><video id="qrv" playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit"></video><div class="line"></div></div>
    <div style="width:100%;display:grid;gap:10px;justify-items:center">${S.scanMsg?`<span style="font-size:14px;opacity:.9">${S.scanMsg}</span>`:""}<button class="btn ghost sm" style="color:#fff" data-act="scancancel">Cancelar</button></div></div>`;
 }
@@ -553,17 +556,17 @@ const A={
     tmrpause(){const T=S.tmr;if(T.paused!=null){T.end=Date.now()+T.paused;T.paused=null}else T.paused=Math.max(0,T.end-Date.now());render()},
     tmrdone(){const T=S.tmr,e=S.w.ex[T.i];e.sets[T.j].done=true;S.tmr=null;
       if(S.w.ex.every(x=>x.sets.every(y=>y.done)))S.sheet="finish";else if(e.sets.some(y=>!y.done)&&e.d)S.rest={end:Date.now()+e.d*1000,total:e.d,next:`Próxima: ${e.n}, série ${e.sets.findIndex(y=>!y.done)+1}`};render()},
-    newficha(){const ks=Object.keys(FICHAS);if(ks.length>=7)return toast("Máximo de 7 fichas (A a G)");const k=String.fromCharCode(65+ks.length);FICHAS[k]={foco:"Nova ficha",ex:[]};ORDER.push(k);S.ficha=k;go("ficha")},
+    newficha(){const ks=Object.keys(FICHAS);if(ks.length>=7)return toast("Máximo de 7 fichas (A a G)");const k=String.fromCharCode(65+ks.length);FICHAS[k]={foco:"Nova ficha",ex:[]};ORDER.push(k);S.ficha=k;S.fichaNova=k;go("ficha")},
     delficha(){const ks0=Object.keys(FICHAS).sort();if(ks0.length<=1)return toast("Mantenha pelo menos uma ficha");const del=S.ficha,map={};ks0.filter(k=>k!==del).forEach((k,i)=>map[k]=String.fromCharCode(65+i));const nf={};for(const k in map)nf[map[k]]=FICHAS[k];FICHAS=nf;
       const di=ORDER.indexOf(del);const nextAfter=ORDER[(di+1)%ORDER.length];ORDER=ORDER.filter(k=>k!==del).map(k=>map[k]);
       if(S.lastDone===del)S.lastDone=ORDER[(ORDER.indexOf(map[nextAfter])-1+ORDER.length)%ORDER.length];else S.lastDone=map[S.lastDone]||ORDER[0];
       S.today=sug();go("fichas");toast("Ficha apagada")},
     add(){S.sheet="add";render()},
-    saveficha(){go("fichas");toast("Ficha salva ✓")},
+    saveficha(){S.fichaNova=null;go("fichas");toast("Ficha salva ✓")},
     notif(){S.notif=!S.notif;render()},
     modeD(){S.mode="direto";S.rest=null;render()},modeC(){S.mode="completo";render()},
     modeDef(){S.modeDef=S.modeDef==="direto"?"completo":"direto";render()},
-    checkin(){if(S.inAt)return toast("Check-in já feito às "+hm(S.inAt));S.scan=true;S.scanMsg="";render();startScan()},
+    checkin(){S.scan=true;S.scanMsg="";render();startScan()},
     scancancel(){stopScan();S.scan=false;render()},
     checkout(){doCheckout()},
     saveout(){A.save();doCheckout()},
@@ -592,7 +595,7 @@ const A={
     treinar(){S.presOnly=false;S.montarAgain=true;go("montar")},
     presToggle(){if(S.presOnly){A.treinar()}else{S.presOnly=true;render();toast("Modo só presença ativado")}},
     vinc_socio(){S.cadDraft.vinc="socio";render()},vinc_dep(){S.cadDraft.vinc="dep";if(!S.cadDraft.posto.trim())S.cadDraft.posto="Civil";render()},
-    savecad(){const c=S.cadDraft;if(!c.nome.trim()||!c.posto.trim()||!c.tel.trim())return toast("Preencha nome, posto ou graduação e contato");if(c.vinc==="dep"&&!c.titular.trim())return toast("Preencha o nome do sócio titular");S.cad={...c};S.boneco=c.boneco||"m";const first=!S.cadEdit;S.cadEdit=false;S.montarAgain=false;go(first?"montar":"perfil");toast(first?"Cadastro salvo ✓":"Cadastro atualizado ✓")},
+    savecad(){const c=S.cadDraft;if(!c.nome.trim()||!c.posto.trim()||!c.tel.trim())return toast("Preencha nome, posto ou graduação e contato");if(c.vinc==="dep"&&!c.titular.trim())return toast("Preencha o nome do sócio titular");S.cad={...c};S.boneco=c.boneco||"m";const first=!S.cadEdit;S.cadEdit=false;S.montarAgain=false;if(first){S.presOnly=true;S.configured=true}go(first?"hoje":"perfil");toast(first?"Cadastro salvo ✓":"Cadastro atualizado ✓")},
     editcad(){S.cadEdit=true;if(S.cad)S.cadDraft={...S.cad};go("cadastro")},
     csv(){const rows=admFiltered();const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
       const lines=[["Nome","Posto","Vínculo","Titular","Data","Entrada","Saída","Duração (min)","Saída automática","Horário do celular divergente"].map(q).join(";")]
@@ -768,7 +771,7 @@ function route(){
   if(!S.configured){S.montarAgain=false;go("montar");return}
   go("hoje");pendingQR()}
 function pendingQR(){let qr=null;try{qr=sessionStorage.getItem("cocta:qr");sessionStorage.removeItem("cocta:qr")}catch(e){}
-  if(!qr||!S.cad)return;if(S.inAt)return toast("Check-in já feito às "+hm(S.inAt));onQR(qrUrl(qr))}
+  if(!qr||!S.cad)return;onQR(qrUrl(qr))}
 
 /* ---------- leitura do QR code pela câmera ---------- */
 let scanStream=null,scanTimer=null,detector=null;
@@ -794,6 +797,9 @@ async function onQR(txt){const code=codeFrom(txt);
   if(!code)return bad();
   if(S.qrHash&&await sha(code)!==S.qrHash){if(!navigator.onLine)return bad();
     try{const {data}=await SB.rpc("qr_hash");if(data)S.qrHash=data}catch(e){}if(await sha(code)!==S.qrHash)return bad()}
+  if(S.inAt){stopScan();S.scan=false;S.scanMsg="";
+    if(Date.now()-new Date(S.inAt).getTime()<5*60000){render();toast("Check-in já feito às "+hm(S.inAt));return true}
+    doCheckout();return true}
   stopScan();S.scan=false;S.scanMsg="";const hora=new Date();S.inAt=hora.toISOString();S.limite=new Date(hora.getTime()+7200000).toISOString();S.ask2h=false;
   S.myPres.unshift({entrada:S.inAt,saida:null});qpush({t:"in",code,hora:S.inAt});S.ok={k:"in"};persist();render();flush();return true}
 
