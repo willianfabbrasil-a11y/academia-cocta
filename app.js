@@ -201,7 +201,7 @@ function vCarregando(){
   return `${sbar(true)}<div class="login"><div class="top"><img src="${LOGO}" alt="COCTA"><h1>Academia COCTA</h1><p>Carregando…</p></div></div>`;
 }
 function vPres(){
-  const nome=S.cad?S.cad.nome.split(/\s+/)[0]:"";
+  const nome=S.cad?esc(S.cad.nome.split(/\s+/)[0]):"";
   return `${sbar(true)}<div class="abar"><div class="wrap"><div style="flex:1"><div class="sub">${hojeTxt()}</div><h1>Olá${nome?", "+nome:""}!</h1></div><button class="icbtn" data-go="perfil" aria-label="Perfil">${ic("user")}</button></div></div>
   <div class="scroll"><div class="wrap" style="padding-top:16px;padding-bottom:20px">
     ${presCard()}
@@ -373,7 +373,7 @@ function chart(v,D){
   </svg>`;
 }
 function vPerfil(){
-  return `${sbar(true)}<div class="abar" style="padding-bottom:26px"><div class="wrap" style="display:block;text-align:center"><div class="avatar">${ini()}</div><h1 style="margin-top:12px">${S.cad?fullName():"Associado COCTA"}</h1><div class="sub">${S.cad?(S.cad.vinc==="socio"?"Sócio":"Dependente de "+(S.cad.titular||"sócio"))+" · "+(S.cad.tel||""):""}</div></div></div>
+  return `${sbar(true)}<div class="abar" style="padding-bottom:26px"><div class="wrap" style="display:block;text-align:center"><div class="avatar">${ini()}</div><h1 style="margin-top:12px">${S.cad?fullName():"Associado COCTA"}</h1><div class="sub">${S.cad?(S.cad.vinc==="socio"?"Sócio":"Dependente de "+esc(S.cad.titular||"sócio"))+" · "+esc(S.cad.tel||""):""}</div></div></div>
   <div class="scroll"><div class="wrap" style="padding-top:18px;padding-bottom:20px">
    ${S.presOnly?`<div class="kpi" style="margin:0 0 18px"><div><b>${S.myPres.length}</b><span>idas registradas</span></div></div>`:`<div class="kpi" style="margin:0 0 18px"><div><b>${HIST.length}</b><span>treinos</span></div><div><b>${semana().filter(d=>d[2]).length}</b><span>esta semana</span></div><div><b>${ORDER.join("·")}</b><span>rodízio</span></div></div>`}
    <div class="list">
@@ -390,8 +390,8 @@ function vPerfil(){
   </div></div>${nav()}${sheets()}`;
 }
 function rotTxt(sep){const ks=ORDER;return ks.length>1?"Rodízio "+ks.join(sep):"Ficha única: "+ks[0]}
-function fullName(){return S.cad?((S.cad.posto&&S.cad.posto.toLowerCase()!=="civil"?S.cad.posto+" ":"")+S.cad.nome):"Associado"}
-function ini(){const n=S.cad?S.cad.nome:"Associado COCTA";return n.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join("")}
+function fullName(){return S.cad?esc((S.cad.posto&&S.cad.posto.toLowerCase()!=="civil"?S.cad.posto+" ":"")+S.cad.nome):"Associado"}
+function ini(){const n=S.cad?S.cad.nome:"Associado COCTA";return n.split(/\s+/).filter(Boolean).slice(0,2).map(x=>esc(x[0].toUpperCase())).join("")}
 function presCard(){
   if(!S.inAt)return `<div class="pres out"><div class="st"><i></i><span class="sp">Você não está na academia<br><small>Chegou? Leia o QR code da porta.</small></span></div><button class="btn red" data-act="checkin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg> Fazer check-in (QR code)</button></div>`;
   return `<div class="pres in"><div class="st"><i></i><span class="sp">Você está na academia<br><small>Entrada às ${hm(S.inAt)}. Na saída, toque abaixo ou leia o mesmo QR code da porta.</small></span></div><button class="btn line" data-act="checkout">${ic("out")} Finalizar o treino de hoje</button></div>`;
@@ -421,12 +421,12 @@ function vCadastro(){
   return `${sbar(true)}<div class="abar"><div class="wrap">${S.cadEdit?`<button class="icbtn" data-go="perfil" aria-label="Voltar">${ic("back")}</button>`:""}<div style="flex:1"><div class="sub">${S.cadEdit?"Perfil":"Primeiro acesso · só uma vez"}</div><h1>${S.cadEdit?"Meu cadastro":"Seu cadastro"}</h1></div></div></div>
   <div class="scroll"><div class="wrap" style="padding-top:18px;padding-bottom:24px">
    ${S.cadEdit?"":`<p class="muted" style="margin:0 0 18px;font-size:14.5px;line-height:1.45">Preencha uma vez. Depois, ao chegar, é só tocar em <b>Fazer check-in</b> e ler o QR code da porta.</p>`}
-   <div class="fld"><label>Nome completo</label><input class="inp" data-cad="nome" value="${c.nome}" placeholder="Ex.: João da Silva" autocomplete="name"></div>
-   <div class="fld"><label>Posto ou graduação (ou Civil para dependentes)</label><input class="inp" data-cad="posto" value="${c.posto}" placeholder="Ex.: Cap, Ten, Sgt ou Civil"></div>
+   <div class="fld"><label>Nome completo</label><input class="inp" data-cad="nome" value="${esc(c.nome)}" placeholder="Ex.: João da Silva" autocomplete="name"></div>
+   <div class="fld"><label>Posto ou graduação (ou Civil para dependentes)</label><input class="inp" data-cad="posto" value="${esc(c.posto)}" placeholder="Ex.: Cap, Ten, Sgt ou Civil"></div>
    <div class="fld"><label>Vínculo</label><div class="radio"><button class="${c.vinc==='socio'?'on':''}" data-act="vinc_socio">Sócio</button><button class="${c.vinc==='dep'?'on':''}" data-act="vinc_dep">Dependente</button></div></div>
-   ${c.vinc==="dep"?`<div class="fld"><label>Nome do sócio titular</label><input class="inp" data-cad="titular" value="${c.titular}" placeholder="Ex.: Cap João da Silva"></div>`:""}
+   ${c.vinc==="dep"?`<div class="fld"><label>Nome do sócio titular</label><input class="inp" data-cad="titular" value="${esc(c.titular)}" placeholder="Ex.: Cap João da Silva"></div>`:""}
    <div class="fld"><label>Sexo</label><div class="radio"><button class="${c.boneco!=='f'?'on':''}" data-act="bon_m">Masculino</button><button class="${c.boneco==='f'?'on':''}" data-act="bon_f">Feminino</button></div><span class="hint">Define o boneco que mostra os músculos de cada treino.</span></div>
-   <div class="fld"><label>Contato (celular / WhatsApp)</label><input class="inp" data-cad="tel" value="${c.tel}" placeholder="(12) 99999-0000" inputmode="tel" autocomplete="tel"></div>
+   <div class="fld"><label>Contato (celular / WhatsApp)</label><input class="inp" data-cad="tel" value="${esc(c.tel)}" placeholder="(12) 99999-0000" inputmode="tel" autocomplete="tel"></div>
    <button class="btn red" style="margin-top:8px" data-act="savecad">${S.cadEdit?"Salvar alterações":"Salvar e começar"}</button>
   </div></div>${S.cadEdit?nav():'<div class="pad-hb"></div>'}`;
 }
@@ -620,10 +620,10 @@ const A={
     async adminpw(){const i=$("#admpw"),pw=(i&&i.value)||admPwBuf;if(!pw||S.admBusy)return;admPwBuf="";S.admBusy=true;S.admErr="";render();
       try{const {data,error}=await SB.rpc("entrar_admin",{p_senha:pw});if(error)throw error;S.admBusy=false;
         if(data===true){S.admin=true;S.sheet=null;persist();A.openadmin()}else{S.admErr="Senha incorreta.";render()}}
-      catch(e){S.admBusy=false;S.admErr=/muitas_tentativas/.test(e&&e.message||"")?"Muitas tentativas. Tente de novo em 15 minutos.":"Sem conexão. Tente de novo.";render()}},
+      catch(e){S.admBusy=false;S.admErr=/muitas_tentativas/.test(e&&e.message||"")?"Muitas tentativas. Tente de novo mais tarde.":"Sem conexão. Tente de novo.";render()}},
     async sairadmin(){try{await SB.rpc("sair_admin")}catch(e){}S.admin=false;persist();go("perfil")},
     asklogout(){S.sheet="logout";render()},
-    async logout(){S.sheet=null;startSession.uid=null;S.ready=false;try{await SB.auth.signOut()}catch(e){}S.user=null;S.admin=false;resetLocal();S.loginBusy=false;go("entrar")},
+    async logout(){S.sheet=null;startSession.uid=null;S.ready=false;try{await SB.auth.signOut()}catch(e){}try{localStorage.removeItem(LSK());localStorage.removeItem("cocta:user");if(!qget().length)localStorage.removeItem(QK())}catch(e){}S.user=null;S.admin=false;resetLocal();S.loginBusy=false;go("entrar")},
   };
 /* arrastar peças do rodízio */
 let DR=null;
