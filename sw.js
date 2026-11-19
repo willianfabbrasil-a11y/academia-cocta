@@ -1,5 +1,5 @@
 // Offline cache: the app opens without internet; data syncs when the connection returns.
-const CACHE = "cocta-v1.0.3";
+const CACHE = "cocta-v1.0.4";
 const CORE = ["./", "index.html", "styles.css", "app.js", "config.js", "manifest.webmanifest",
   "vendor/supabase.js", "vendor/jsQR.js", "vendor/qrcode.js",
   "img/logo.webp", "img/icon-192.png", "img/icon-512.png", "img/icon-180.png"];

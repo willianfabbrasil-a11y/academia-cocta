@@ -103,7 +103,7 @@ function bodySvg(side,P,Sx,opt){opt=opt||{};const g=(S.cad&&S.cad.boneco)||S.bon
     for(const d of parts[k])h+=`<path class="m ${cls}${sel}" ${cls==="p"||cls==="s"?`data-mus="${k}"`:""} d="${d}"/>`}
   return `<svg class="bsvg ${opt.tap?'tap':''}" viewBox="${B.vb[side]}" role="img" aria-label="Boneco ${side==='front'?'de frente':'de costas'}">${h}<path class="b" d="${B.border[side]}"/></svg>`}
 function musOf(list){const P=new Set(),Sx=new Set();list.forEach(e=>{const x=EXI[e.n];if(!x)return;x.p.forEach(m=>P.add(m));x.s.forEach(m=>Sx.add(m))});P.forEach(m=>Sx.delete(m));return {P:[...P],S:[...Sx]}}
-function bodyPair(P,Sx,opt){return `<div class="bodies"><figure>${bodySvg("front",P,Sx,opt)}<figcaption>Frente</figcaption></figure><figure>${bodySvg("back",P,Sx,opt)}<figcaption>Costas</figcaption></figure></div><div class="legend"><span><i style="background:#CE372E"></i>Principal</span><span><i style="background:#f2a69f"></i>Auxiliar</span></div>`}
+function bodyPair(P,Sx,opt){return `<div class="bodies"><figure>${bodySvg("front",P,Sx,opt)}<figcaption>Frente</figcaption></figure><figure>${bodySvg("back",P,Sx,opt)}<figcaption>Costas</figcaption></figure></div><div class="legend"><span><i style="background:#D63A1E"></i>Principal</span><span><i style="background:#f2a69f"></i>Auxiliar</span></div>`}
 Object.assign(EXI,{
  "Elevação pélvica":{p:["gluteal"],s:["hamstring"],t:["Costas apoiadas no banco, barra sobre o quadril (use uma proteção).","Suba o quadril até o tronco ficar alinhado com as coxas.","Aperte os glúteos no alto e desça controlando."]},
  "Abdução na máquina":{p:["gluteal"],s:[],t:["Sente com as costas apoiadas e as almofadas por fora dos joelhos.","Abra as pernas empurrando para fora.","Volte devagar sem deixar o peso bater."]},
@@ -178,7 +178,7 @@ let PRES=[];
 const now=()=>new Date().toTimeString().slice(0,5);
 let ORDER=["A","B","C"];
 const STD=JSON.parse(JSON.stringify(FICHAS));
-const PCOL=["#3A507A","#CE372E","#5b7bb3","#2c3e60","#e06a5f","#7a8fb3","#a32a22"];
+const PCOL=["#1A1AE6","#D63A1E","#5b7bb3","#1212B0","#e06a5f","#7a8fb3","#a32a22"];
 function sug(){const i=ORDER.indexOf(S.lastDone);return ORDER[(i+1)%ORDER.length]}
 function puzzle(arr,id,bg){return `<div class="puz" data-puz="${id}" style="--pbg:${bg||'#fff'}">${arr.map((k,i)=>`<div class="pc" data-pk="${k}" style="--c:${PCOL[(k.charCodeAt(0)-65)%PCOL.length]}"><b>${k}</b><small>${FICHAS[k]?FICHAS[k].foco.split(" e ")[0]:""}</small></div>`).join("")}</div><div class="seqtxt">${arr.join(" → ")} → ${arr[0]}…</div>`}
 
@@ -284,7 +284,7 @@ function tmrSheet(){
   if(!S.tmr)return"";const T=S.tmr,e=S.w.ex[T.i],left=tmrLeft(),C=2*Math.PI*84,fin=left===0;
   return `<div class="dim" data-dim="tmrclose"><div class="sheet"><div class="wrap"><div class="grab"></div><div class="rest">
     <b style="font-size:18px">${fin?"Tempo concluído!":e.n}</b><span class="muted" style="font-size:14px">${e.s>1?`Série ${T.j+1} de ${e.s} · `:""}${e.r} min</span>
-    <div class="ring ${fin?'end':''}"><svg viewBox="0 0 190 190"><circle cx="95" cy="95" r="84" fill="none" stroke="#eef0f4" stroke-width="12"/><circle id="tarc" cx="95" cy="95" r="84" fill="none" stroke="${fin?'#2f8a4c':'#3A507A'}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-left/T.total)}"/></svg><div class="t" id="tt">${fmt(left)}</div></div>
+    <div class="ring ${fin?'end':''}"><svg viewBox="0 0 190 190"><circle cx="95" cy="95" r="84" fill="none" stroke="#eef0f4" stroke-width="12"/><circle id="tarc" cx="95" cy="95" r="84" fill="none" stroke="${fin?'#2f8a4c':'#1A1AE6'}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-left/T.total)}"/></svg><div class="t" id="tt">${fmt(left)}</div></div>
     <div class="acts">${fin?`<button class="btn red sm" style="grid-column:1/-1" data-act="tmrdone">Concluir</button>`:`<button class="btn line sm" data-act="tmrpause">${T.paused!=null?"Continuar":"Pausar"}</button><button class="btn red sm" data-act="tmrdone">Terminei</button>`}</div>
   </div></div></div></div>`;
 }
@@ -294,7 +294,7 @@ function restSheet(){
   const left=Math.max(0,Math.ceil((S.rest.end-Date.now())/1000)),frac=left/S.rest.total,C=2*Math.PI*84;
   return `<div class="dim" data-dim="restclose"><div class="sheet"><div class="wrap"><div class="grab"></div><div class="rest">
     <b style="font-size:18px">${left?"Descanso":"Bora para a próxima!"}</b><span class="muted" style="font-size:14px">${S.rest.next||"Treino quase no fim"}</span>
-    <div class="ring ${left?'':'end'}" id="ring"><svg viewBox="0 0 190 190"><circle cx="95" cy="95" r="84" fill="none" stroke="#eef0f4" stroke-width="12"/><circle id="arc" cx="95" cy="95" r="84" fill="none" stroke="${left?'#3A507A':'#CE372E'}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-frac)}"/></svg><div class="t" id="rt">${fmt(left)}</div></div>
+    <div class="ring ${left?'':'end'}" id="ring"><svg viewBox="0 0 190 190"><circle cx="95" cy="95" r="84" fill="none" stroke="#eef0f4" stroke-width="12"/><circle id="arc" cx="95" cy="95" r="84" fill="none" stroke="${left?'#1A1AE6':'#D63A1E'}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-frac)}"/></svg><div class="t" id="rt">${fmt(left)}</div></div>
     <div class="acts"><button class="btn line sm" data-act="plus15">+15 s</button><button class="btn red sm" data-act="restclose">${left?"Pular":"Continuar"}</button></div>
   </div></div></div></div>`;
 }
@@ -367,8 +367,8 @@ function chart(v,D){
   const area=path+`L${x(v.length-1)},${H-p.b}L${x(0)},${H-p.b}Z`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução de carga">
    ${ticks.map(t=>`<line x1="${p.l}" x2="${W-p.r}" y1="${y(t)}" y2="${y(t)}" stroke="#e8eaef"/><text x="${p.l-6}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="#8a92a3">${t}</text>`).join("")}
-   <path d="${area}" fill="#3A507A" opacity=".08"/><path d="${path}" fill="none" stroke="#3A507A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-   ${v.map((val,i)=>`<circle cx="${x(i)}" cy="${y(val)}" r="${i===v.length-1?5:3.5}" fill="${i===v.length-1?'#CE372E':'#3A507A'}" stroke="#fff" stroke-width="1.5"><title>${D[i]}: ${val} kg</title></circle>`).join("")}
+   <path d="${area}" fill="#1A1AE6" opacity=".08"/><path d="${path}" fill="none" stroke="#1A1AE6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+   ${v.map((val,i)=>`<circle cx="${x(i)}" cy="${y(val)}" r="${i===v.length-1?5:3.5}" fill="${i===v.length-1?'#D63A1E':'#1A1AE6'}" stroke="#fff" stroke-width="1.5"><title>${D[i]}: ${val} kg</title></circle>`).join("")}
    ${[...new Set([0,Math.floor((v.length-1)/2),v.length-1])].map(i=>`<text x="${x(i)}" y="${H-6}" text-anchor="middle" font-size="11" fill="#8a92a3">${D[i]}</text>`).join("")}
   </svg>`;
 }
